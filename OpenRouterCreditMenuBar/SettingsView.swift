@@ -66,16 +66,42 @@ struct SettingsView: View {
                 HStack {
                     Button("Test Connection") {
                         Task {
-                            await creditManager.fetchCredit()
+                            await creditManager.testConnection()
                         }
                     }
                     .disabled(apiKey.isEmpty)
 
-                    if creditManager.isLoading {
+                    if creditManager.isTestingConnection {
                         ProgressView()
                             .scaleEffect(0.5)
+                    } else if let result = creditManager.connectionTestResult {
+                        if result {
+                            Label("Connected", systemImage: "checkmark.circle.fill")
+                                .font(.caption)
+                                .foregroundColor(.green)
+                        } else {
+                            Label("Failed", systemImage: "xmark.circle.fill")
+                                .font(.caption)
+                                .foregroundColor(.red)
+                        }
                     }
                 }
+
+                if let connectionMessage = creditManager.connectionTestMessage {
+                    Text(connectionMessage)
+                        .font(.caption2)
+                        .foregroundColor(creditManager.connectionTestResult == true ? .green : .red)
+                }
+            }
+
+            Section("Alerts") {
+                Toggle("Alert on key anomaly spikes", isOn: $creditManager.isKeyAnomalyAlertEnabled)
+
+                Toggle("Alert when credit is below warning threshold", isOn: $creditManager.isLowCreditAlertEnabled)
+
+                Text("Alerts are delivered via macOS notifications.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
             }
 
             if let error = creditManager.errorMessage {
